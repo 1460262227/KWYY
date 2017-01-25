@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections.Generic;
 
 public class SpeechRecognizerDemoSceneManager : MonoBehaviour
@@ -56,10 +57,11 @@ public class SpeechRecognizerDemoSceneManager : MonoBehaviour
 
 		// Need to parse
 		string[] texts = results.Split (new string[] { SpeechRecognizerManager.RESULT_SEPARATOR }, System.StringSplitOptions.None);
-		;
-
+		
 		DebugLog ("Speech results:\n   " + string.Join ("\n   ", texts));
-	}
+
+        FireResult(texts[0]);
+    }
 
 	void OnSpeechError (string error)
 	{
@@ -99,74 +101,96 @@ public class SpeechRecognizerDemoSceneManager : MonoBehaviour
 		}
 
 		_isListening = false;
-	}
+        FireResult(null);
+    }
 
-	#endregion
+    #endregion
 
-	#region GUI
-    
-	void OnGUI ()
-	{
-		float originalScreenWidth = 400f;
-		float originalScreenHeight = (originalScreenWidth / Screen.width) * Screen.height;
-		float scale = Screen.width / originalScreenWidth;
-		Matrix4x4 svMat = GUI.matrix; // save current matrix
-		GUI.matrix = Matrix4x4.Scale (Vector3.one * scale);
+    #region control interface
 
-		GUI.skin.label.fontStyle = FontStyle.Bold;
-		GUI.skin.label.alignment = TextAnchor.MiddleCenter;
-		GUI.Label (new Rect (0f, 0f, originalScreenWidth, originalScreenHeight * 0.05f), "Android Speech Recognizer Plugin");
+    void FireResult(string r)
+    {
+        if (OnResult != null)
+        {
+            OnResult(r == null ? "" : r);
+            OnResult = null;
+        }
+    }
 
-		GUI.skin.label.fontStyle = FontStyle.Normal;
-		GUI.skin.label.alignment = TextAnchor.LowerLeft;
-		Rect layoutRect = new Rect (originalScreenWidth * 0.05f, originalScreenHeight * 0.1f, originalScreenWidth * 0.9f, originalScreenHeight * 0.85f);
-		GUILayout.BeginArea (layoutRect, GUI.skin.box);
-        
-		GUILayout.BeginVertical ();
-        
-		GUILayout.Label ("Available: " + SpeechRecognizerManager.IsAvailable ());
+    public Action<string> OnResult;
+    public void StartSR(Action<string> onResult)
+    {
+        OnResult = onResult;
+        _isListening = true;
+        _speechManager.StartListening(1, "en-US");
+    }
 
-		if (SpeechRecognizerManager.IsAvailable ()) {
-			GUILayout.Label (_message);
-			
-			GUILayout.Space (35f);
+    #endregion
 
-			if (!_isListening && GUILayout.Button ("Start Listening")) {
-				_isListening = true;
-				_speechManager.StartListening (3, "en-US"); // Use english and return maximum three results.
-				// _speechManager.StartListening (); // No parameters will use the device default language and returns maximum 5. results
-			}
+    //#region GUI
 
-			/*
-			 * Speech captured so far will be recognized as if the user had stopped speaking at this point. 
-			 * This does not need to be called, as it will automatically stop the recognizer listening when it determines speech has completed.
-			 */
-			if (_isListening && GUILayout.Button ("Stop Listening")) {
-				_speechManager.StopListening ();
-				_isListening = false;
-			}
+    //void OnGUI ()
+    //{
+    //	float originalScreenWidth = 400f;
+    //	float originalScreenHeight = (originalScreenWidth / Screen.width) * Screen.height;
+    //	float scale = Screen.width / originalScreenWidth;
+    //	Matrix4x4 svMat = GUI.matrix; // save current matrix
+    //	GUI.matrix = Matrix4x4.Scale (Vector3.one * scale);
 
-			/*
-			 * Cancels the speech recognition.
-			 */
-			if (_isListening && GUILayout.Button ("Cancel")) {
-				_speechManager.CancelListening ();
-				_isListening = false;
-			}
-		}
+    //	GUI.skin.label.fontStyle = FontStyle.Bold;
+    //	GUI.skin.label.alignment = TextAnchor.MiddleCenter;
+    //	GUI.Label (new Rect (0f, 0f, originalScreenWidth, originalScreenHeight * 0.05f), "Android Speech Recognizer Plugin");
 
-		GUILayout.EndVertical ();
-        
-		GUILayout.EndArea ();
+    //	GUI.skin.label.fontStyle = FontStyle.Normal;
+    //	GUI.skin.label.alignment = TextAnchor.LowerLeft;
+    //	Rect layoutRect = new Rect (originalScreenWidth * 0.05f, originalScreenHeight * 0.1f, originalScreenWidth * 0.9f, originalScreenHeight * 0.85f);
+    //	GUILayout.BeginArea (layoutRect, GUI.skin.box);
 
-		GUI.matrix = svMat;
-	}
+    //	GUILayout.BeginVertical ();
 
-	#endregion
+    //	GUILayout.Label ("Available: " + SpeechRecognizerManager.IsAvailable ());
 
-	#region DEBUG
+    //	if (SpeechRecognizerManager.IsAvailable ()) {
+    //		GUILayout.Label (_message);
 
-	private void DebugLog (string message)
+    //		GUILayout.Space (35f);
+
+    //		if (!_isListening && GUILayout.Button ("Start Listening")) {
+    //			_isListening = true;
+    //			_speechManager.StartListening (3, "en-US"); // Use english and return maximum three results.
+    //			// _speechManager.StartListening (); // No parameters will use the device default language and returns maximum 5. results
+    //		}
+
+    //		/*
+    //		 * Speech captured so far will be recognized as if the user had stopped speaking at this point. 
+    //		 * This does not need to be called, as it will automatically stop the recognizer listening when it determines speech has completed.
+    //		 */
+    //		if (_isListening && GUILayout.Button ("Stop Listening")) {
+    //			_speechManager.StopListening ();
+    //			_isListening = false;
+    //		}
+
+    //		/*
+    //		 * Cancels the speech recognition.
+    //		 */
+    //		if (_isListening && GUILayout.Button ("Cancel")) {
+    //			_speechManager.CancelListening ();
+    //			_isListening = false;
+    //		}
+    //	}
+
+    //	GUILayout.EndVertical ();
+
+    //	GUILayout.EndArea ();
+
+    //	GUI.matrix = svMat;
+    //}
+
+    //#endregion
+
+    #region DEBUG
+
+    private void DebugLog (string message)
 	{
 		Debug.Log (message);
 		_message = message;

@@ -1,9 +1,11 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System;
 
 public class UIManager : MonoBehaviour {
 
     public GameObject Wait4ClickAnyMask;
+    public Text Sigboard;
 
     Func<bool> onEndWaiter = null;
     public void Wait4ClickAny(Func<bool> onEnd)
@@ -23,5 +25,10 @@ public class UIManager : MonoBehaviour {
             Wait4ClickAnyMask.SetActive(false);
 
         onEndWaiter = null;
+    }
+
+    public void SetText(string t)
+    {
+        Sigboard.text = t;
     }
 }
